@@ -1,8 +1,7 @@
 use std::{env, error::Error, io};
-
 use kagi_openapi_rust::{
     apis::{configuration::Configuration, search_api},
-    models::SearchRequest,
+    models::SearchRequest, models::SearchRequestFilters,
 };
 
 #[tokio::main]
@@ -22,9 +21,29 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ..Configuration::default()
     };
 
-    let mut request = SearchRequest::new("한국외국어대학교".to_string());
-    request.limit = Some(5);
-    request.safe_search = Some(true);
+    let mut request = SearchRequest::new("투자자산운용사".to_string());
+    //request.limit = Some(5);
+    //request.safe_search = Some(true);
+    request.lens_id = Some("TT8mzzN1G5jHaV9ih0lH6SlMSbru5RGW".to_string());
+    request.filters = Some(Box::new(SearchRequestFilters {
+        region: Some("kr".to_string()),
+        after: None,
+        before: None,
+    }));
+    request.page = Some(2);
+    //let sites_included = Some(vec!["*.hufs.ac.kr".to_string()]);
+    //let sites_excluded = Some(vec!["*.namu.wiki".to_string()]);
+    // request.lens = Some(Box::new(SearchRequestLens {
+    //     sites_included: None,
+    //     sites_excluded: None,
+    //     keywords_included: None,
+    //     keywords_excluded: None,
+    //     file_type: Some("pdf".to_string()),
+    //     time_after: None,
+    //     time_before: None,
+    //     time_relative: None,
+    //     search_region: None,
+    // }));
 
     let response = search_api::search(&configuration, request).await?;
 
