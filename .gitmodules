@@ -1,0 +1,3 @@
+[submodule "kagi-openapi-rust"]
+	path = kagi-openapi-rust
+	url = https://github.com/kagisearch/kagi-openapi-rust.git

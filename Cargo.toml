@@ -1,2 +1,7 @@
 [workspace]
 members = ["search"]
+resolver = "3"
+
+[workspace.dependencies]
+kagi-openapi-rust = {path = "kagi-openapi-rust"}
+dotenvy = "0.15"
