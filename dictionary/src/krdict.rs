@@ -86,19 +86,31 @@ enum Translated {
 }
 
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, strum::Display)]
 enum TransLang {
+    #[strum(to_string = "0")]
     All,
+    #[strum(to_string = "1")]
     English,
+    #[strum(to_string = "2")]
     Japanese,
+    #[strum(to_string = "3")]
     French,
+    #[strum(to_string = "4")]
     Spanish,
+    #[strum(to_string = "5")]
     Arabic,
+    #[strum(to_string = "6")]
     Mongolian,
+    #[strum(to_string = "7")]
     Vietnamese,
+    #[strum(to_string = "8")]
     Thai,
+    #[strum(to_string = "9")]
     Indonesian,
+    #[strum(to_string = "10")]
     Russian,
+    #[strum(to_string = "11")]
     Chinese
 }
 
@@ -124,25 +136,33 @@ impl TryFrom<u8> for TransLang {
     }
 }
 
-macro_rules! impl_try_from_int {
-    ($($ty:ty),* $(,)?) => {
+macro_rules! impl_try_from_ints {
+    // 기본 정수 타입 전체에 적용
+    ($enum:ty) => {
+        impl_try_from_ints!(
+            $enum,
+            u16, u32, u64, u128, usize,
+            i8, i16, i32, i64, i128, isize
+        );
+    };
+    // 특정 타입만 지정
+    ($enum:ty, $($num:ty),+ $(,)?) => {
         $(
-            impl TryFrom<$ty> for TransLang {
-                type Error = ();
+            impl TryFrom<$num> for $enum {
+                type Error = <$enum as TryFrom<u8>>::Error;
 
-                fn try_from(value: $ty) -> Result<Self, Self::Error> {
-                    let value = u8::try_from(value).map_err(|_| ())?;
-                    Self::try_from(value)
+                fn try_from(value: $num) -> Result<Self, Self::Error> {
+                    match u8::try_from(value) {
+                        Ok(v) => <$enum>::try_from(v),
+                        Err(_) => Err(()),
+                    }
                 }
             }
-        )*
+        )+
     };
 }
 
-impl_try_from_int!(
-    i8, i16, i32, i64, i128, isize,
-    u16, u32, u64, u128, usize,
-);
+impl_try_from_ints!(TransLang);
 
 #[derive(strum::Display)]
 /// 자세히 찾기 여부입니다.
@@ -155,6 +175,107 @@ enum Advanced {
     N,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+enum Target {
+    Headword,
+    Definition,
+    Example,
+    OriginalLanguage(Lang),
+    Pronunciation,
+    Conjugation,
+    AbbreviationOfConjugation,
+    Idiom,
+    Proverb,
+    ReferenceInformation,
+}
+
+impl Default for Target {
+    fn default() -> Self {
+        Target::Headword
+    }
+}
+
+impl TryFrom<u8> for Target {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            1 => Ok(Target::Headword),
+            2 => Ok(Target::Definition),
+            3 => Ok(Target::Example),
+            4 => Ok(Target::OriginalLanguage(Lang::default())),
+            5 => Ok(Target::Pronunciation),
+            6 => Ok(Target::Conjugation),
+            7 => Ok(Target::AbbreviationOfConjugation),
+            8 => Ok(Target::Idiom),
+            9 => Ok(Target::Proverb),
+            10 => Ok(Target::ReferenceInformation),
+            _ => Err(()),
+        }
+    }
+}
+
+impl_try_from_ints!(Target);
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+enum Lang {
+    All,
+    PureKorean,
+    Hanja,
+    Undisclosed,
+    English,
+    Greek,
+    Dutch,
+    Norwegian,
+    German,
+    Latin,
+    Russian,
+    Romanian,
+    Maori,
+    Malay,
+    Mongolian,
+    Basque,
+    Burmese,
+    Vietnamese,
+    Bulgarian,
+    Sanskrit,
+    SerboCroatian,
+    Swahili,
+    Swedish,
+    Arabic,
+    Irish,
+    Spanish,
+    Uzbek,
+    Ukrainian,
+    Italian,
+    Indonesian,
+    Japanese,
+    Chinese,
+    Czech,
+    Cambodian,
+    Quechua,
+    Tagalog,
+    Thai,
+    Turkish,
+    Tibetan,
+    Persian,
+    Portuguese,
+    Polish,
+    French,
+    Provencal,
+    Finnish,
+    Hungarian,
+    Hebrew,
+    Hindi,
+    Others,
+    Danish,
+}
+
+impl Default for Lang {
+    fn default() -> Self {
+        Lang::All
+    }
+}
 
 
 
@@ -164,8 +285,6 @@ pub struct Request {
     start: Option<Start>,
     num: Option<Num>,
 }
-
-
 
 impl Request {
     pub fn build(key: String, query: String, start: Option<u16>, num: Option<u8>) -> Vec<(String, String)> {
